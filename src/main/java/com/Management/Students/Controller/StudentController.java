@@ -1,6 +1,8 @@
 package com.Management.Students.Controller;
 
+import com.Management.Students.Dto.LoginResponse;
 import com.Management.Students.Dto.StudentDto;
+import com.Management.Students.Service.JwtService;
 import com.Management.Students.Service.StudentService;
 import com.Management.Students.model.Student;
 import jakarta.validation.Valid;
@@ -8,6 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+
 
 import java.util.List;
 
@@ -18,8 +22,11 @@ public class StudentController {
     @Autowired
     StudentService studentService;
 
+    private final JwtService jwtService;
 
-
+    public StudentController(JwtService jwtService) {
+        this.jwtService = jwtService;
+    }
 
     @GetMapping
     public List<StudentDto> getAllStudent(){
@@ -39,6 +46,20 @@ public class StudentController {
     public StudentDto CreateStudent (@RequestBody @Valid StudentDto studentDto ) {
 
         return studentService.CreateStudent(studentDto);
+    }
+
+
+    @PostMapping("/login")
+    public ResponseEntity<LoginResponse> authenticate(@RequestBody StudentDto studentDto) {
+        Student authenticatedUser = studentService.authenticate(studentDto);
+
+        String jwtToken = jwtService.generateToken(authenticatedUser);
+
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setToken(jwtToken);
+        loginResponse.setExpiresIn(jwtService.getExpirationTime());
+
+        return ResponseEntity.ok(loginResponse);
     }
 
     @PutMapping()

@@ -26,7 +26,16 @@ public class StudentDto {
     @NotBlank(message = "Email is empty")
     private String email;
 
+    @NotBlank(message = "passwordd is empty")
+    private String password;
 
+    public @NotBlank(message = "passwordd is empty") String getPassword() {
+        return password;
+    }
+
+    public void setPassword(@NotBlank(message = "passwordd is empty") String password) {
+        this.password = password;
+    }
 
     public String getFirstName() {
         return firstName;

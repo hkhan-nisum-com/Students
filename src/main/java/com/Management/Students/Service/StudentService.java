@@ -8,6 +8,9 @@ import com.Management.Students.repository.CourseRepository;
 import com.Management.Students.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +25,21 @@ public class StudentService {
 
     @Autowired
     CourseRepository courseRepository;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final AuthenticationManager authenticationManager;
+
+    public StudentService(
+            StudentRepository studentRepository,
+            AuthenticationManager authenticationManager,
+            PasswordEncoder passwordEncoder
+    ) {
+        this.authenticationManager = authenticationManager;
+        this.studentRepository = studentRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
+
 
 
     public List<StudentDto> getAllStudent(){
@@ -41,10 +59,24 @@ public class StudentService {
 //            if (studentRepository.existsByLastName(student.getLastName())){
 //                throw new ResoureNotFound("A student with already exist with last name " + student.getLastName());
 //            }
+        student.setPassword(passwordEncoder.encode(student.getPassword()));
             Student studentCreated =  studentRepository.save(student);
             return convertToDto(studentCreated);
 
     }
+
+    public Student authenticate(StudentDto studentDto) {
+        authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        studentDto.getEmail(),
+                        studentDto.getPassword()
+                )
+        );
+
+        return studentRepository.findByEmail(studentDto.getEmail())
+                .orElseThrow();
+    }
+
 
     public ResponseEntity<StudentDto> UpdateStudent (StudentDto studentDto){
         Student student = studentRepository.findById(studentDto.getId()).orElseThrow();
